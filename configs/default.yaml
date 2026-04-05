@@ -1,0 +1,114 @@
+# =============================================================================
+# Default Configuration – ML for CFD: Comparative Study
+# =============================================================================
+
+# ── Data ──────────────────────────────────────────────────────────────────────
+data:
+  filename: "2D_rdb_NA_NA"           # HDF5 stem (without .h5)
+  base_path: "../data/"           # Relative path from MyProject/scripts/
+  initial_step: 10                   # Number of context timesteps fed as input
+  t_train: 40                        # Number of total timesteps to supervise
+  test_ratio: 0.1                    # Fraction of seeds held out for test
+  val_ratio: 0.1                     # Fraction of remaining seeds → validation
+  num_workers: 0                     # DataLoader workers (0 = main thread)
+  seed: 42                           # RNG seed for reproducibility
+
+# ── Training ──────────────────────────────────────────────────────────────────
+training:
+  epochs: 200                        # full run target for CNN/UNet/FNO
+  batch_size: 4
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-4
+  scheduler_step: 100                # LR × 0.5 midway for 200-epoch runs
+  scheduler_gamma: 0.5
+  model_update_freq: 5               # Validate every N epochs
+  gradient_clip: 1.0                 # Max gradient norm (0 = disabled)
+
+# ── Quick mode (sanity check) ─────────────────────────────────────────────────
+quick:
+  enabled: false
+  max_samples: 20                    # Cap dataset size
+  epochs: 3
+  batch_size: 2
+
+# ── CNN ───────────────────────────────────────────────────────────────────────
+cnn:
+  base_channels: 32
+  n_layers: 5
+  kernel_size: 3
+  dropout: 0.0
+  residual_scale: 0.10               # bounded delta update factor
+  output_clip: 5.0                   # clamp normalized predictions during rollout
+  # Trained with autoregressive pushforward rollout
+  ar_mode: true
+  pushforward: true
+  unroll_step: 20
+
+# ── CNN + LSTM ───────────────────────────────────────────────────────────────
+cnn_lstm:
+  base_channels: 32
+  hidden_channels: 32
+  kernel_size: 3
+  dropout: 0.0
+  ar_mode: true
+  pushforward: true
+  unroll_step: 20
+
+# ── U-Net ──────────────────────────────────────────────────────────────────────
+unet:
+  init_features: 32
+  use_lomix: true                    # True = UNet2dLoMix, False = vanilla UNet2d
+  dropout: 0.0
+  # Autoregressive rollout settings
+  ar_mode: true
+  pushforward: true
+  unroll_step: 20
+
+# ── UNet-LoMix + PINN-style hybrid ───────────────────────────────────────────
+unet_pinn:
+  t_train: 40                        # rollout horizon for AR physics loss
+  unroll_step: 20                    # final rollout window that contributes loss
+  lambda_data: 1.0                   # supervised h loss weight
+  lambda_pde: 0.1                    # PDE residual weight
+  lambda_icuv: 0.1                   # first-step u,v near-zero regularization
+  g: 1.0                             # SWE gravity term in residual
+  x_min: -2.5
+  x_max: 2.5
+  y_min: -2.5
+  y_max: 2.5
+
+# ── FNO ───────────────────────────────────────────────────────────────────────
+fno:
+  modes1: 12
+  modes2: 12
+  width: 20
+  ar_mode: true
+  unroll_step: 20
+
+# ── PINN ──────────────────────────────────────────────────────────────────────
+# Matches reference PDEBench setup_swe_2d exactly (pure-PyTorch, no DeepXDE):
+#   Network : FNN([3] + [40]*6 + [3], Tanh, Glorot normal)
+#   PDE     : 2-D SWE non-conservative form, g = 1.0
+#   Coords  : x,y ∈ (−2.5, 2.5),  t ∈ (0, 1.0)
+#   Outputs : (h, u, v) — data supervision on h only, u=v=0 as IC
+pinn:
+  hidden_dims: [40, 40, 40, 40, 40, 40]   # FNN [3]+[40]*6+[3] as in reference
+  g: 1.0                                   # gravitational constant (SWE)
+  n_collocation: 1000                      # reference num_domain
+  n_initial: 5000                          # reference num_initial
+  lambda_pde: 1.0                          # weight of PDE residual loss
+  lambda_data: 1.0                         # weight of supervised h data loss
+  lambda_ic: 1.0                           # weight of IC (u=v=0) + IC-h loss
+  epochs: 2000                             # stronger default; reference uses 15000
+  learning_rate: 1.0e-3                    # reference Adam learning rate
+  n_data_pts: -1                           # -1 uses full 30% data pool each epoch
+  n_eval_seeds: 2                          # seeds evaluated per run
+  reference_mode: false                    # set true or pass --reference for strict PDEBench-like run
+  reference_epochs: 15000                  # matches config_pinn_swe2d.yaml
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+paths:
+  checkpoint_dir: "results/checkpoints"
+  log_dir: "results/logs"
+  figure_dir: "figures"
+  results_dir: "results"

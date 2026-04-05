@@ -1,0 +1,32 @@
+{
+  "unet": {
+    "display_name": "U-Net",
+    "rmse": 0.7880969643592834,
+    "rel_l2": 0.7613866329193115,
+    "max_error": 2.0147554874420166,
+    "inference_time_s": 1.469,
+    "n_params": 7765057,
+    "source": "measured",
+    "speedup_vs_pinn": 0.03
+  },
+  "unet_lomix": {
+    "display_name": "U-Net (LoMix)",
+    "rmse": 0.08536465466022491,
+    "rel_l2": 0.08213194459676743,
+    "max_error": 1.2113230228424072,
+    "inference_time_s": 9.5313,
+    "n_params": 7765516,
+    "source": "measured",
+    "speedup_vs_pinn": 0.01
+  },
+  "fno": {
+    "display_name": "FNO",
+    "rmse": 0.07475829869508743,
+    "rel_l2": 0.07192724198102951,
+    "max_error": 1.278511881828308,
+    "inference_time_s": 5.3659,
+    "n_params": 465557,
+    "source": "measured",
+    "speedup_vs_pinn": 0.01
+  }
+}
