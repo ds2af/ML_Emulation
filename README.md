@@ -7,10 +7,6 @@ Included models:
 - U-Net (LoMix)
 - FNO
 
-Excluded from this release:
-- CNN
-- U-Net (LoMix + PINN)
-- PINN
 
 ## Contents
 - `configs/default.yaml`
